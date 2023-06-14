@@ -6,6 +6,7 @@ from numba import njit
 
 from fastapi import FastAPI
 from fastapi import Response
+from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
 
@@ -48,8 +49,20 @@ def cast_flat_array_to_2d_map(old_shape, array):
     return np.reshape(array, old_shape)
 
 
+origins = [
+    "*"
+]
+
 app = FastAPI()
 
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get(
     "/mandelbrot",
@@ -66,18 +79,17 @@ async def mandelbrot_generator(
     coord_map = generate_2d_complex_map(x, y, step, width, height)
 
     shape, flat_coord_map = cast_2d_map_to_id_array(coord_map)
-    # c = cast_flat_array_to_2d_map(shape, flat_coord_map)
 
-    to_cuda = cuda.device_array_like(np.zeros(shape=flat_coord_map.shape))
+    cuda_arr = cuda.device_array_like(np.zeros(shape=flat_coord_map.shape))
 
     threads_per_block = CUDA_THREADS
     blockspergrid = (flat_coord_map.size + (threads_per_block - 1)) // threads_per_block
 
-    dev_b = cuda.to_device(flat_coord_map)
+    cuda_coord = cuda.to_device(flat_coord_map)
 
-    check_cuda[blockspergrid, threads_per_block](to_cuda, dev_b)
+    check_cuda[blockspergrid, threads_per_block](cuda_arr, cuda_coord)
 
-    flat_mandelbrot = to_cuda.copy_to_host()
+    flat_mandelbrot = cuda_arr.copy_to_host()
 
     mandelbrot = np.nan_to_num(cast_flat_array_to_2d_map(shape, flat_mandelbrot))
 
