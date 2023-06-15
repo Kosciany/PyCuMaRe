@@ -114,10 +114,13 @@ function MandelbrotForm() {
           </Button>
         </Form>
         </Row>
-        <Row class="align-self-center my-2">
-        <Spinner animation="border" role="status" hidden={!loading} width="100%">
+        <Row class="my-2 py-2 flex align-items-center justify-content-center">
+          <Container class="my-3">
+         {loading && <Spinner animation="border" role="status" >
           <span className="visually-hidden">Loading...</span>
         </Spinner>
+        }
+        </Container>
         </Row>
       </Col>
       <Col sm={8}>{image && <Image src={image} rounded alt="mandelbrot" fluid/>}</Col>
