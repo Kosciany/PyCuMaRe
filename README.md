@@ -1,6 +1,7 @@
 # PyCuMaRe
 
 Full-stack application that visualizes Mandelbrot set in area selected by user.
+<img src="logo.png" width="500px" alt="Project logo, generated in the app itself">
 
 ## Description
 
